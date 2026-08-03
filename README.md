@@ -123,12 +123,21 @@ Hai chỗ dễ sai đã kiểm chứng bằng thực nghiệm:
 
 | Chỉ số | Lấy từ đâu |
 | --- | --- |
+| Icon | Suy từ tên loại agent theo từ khoá; loại lạ vẫn nhận icon cố định qua hash tên |
 | Model | `message.model` của bản ghi assistant, rút gọn thành `Opus 5`, `Haiku 4.5` |
-| Token ra | Tổng `output_tokens`, gom theo `message.id` |
+| Token vào | Tổng `input_tokens` + `cache_creation_input_tokens` - phần model phải nạp mới |
+| Token ra | Tổng `output_tokens` |
+| Cache | Tổng `cache_read_input_tokens` - phần được phục vụ từ cache, không phải nạp lại |
 | Tool | Số `tool_use` id duy nhất |
 | Lượt | Số `message.id` duy nhất |
+| Phân bố tool | Đếm theo tên tool, hiện 5 tool nhiều nhất |
+| Lỗi | Số `tool_result` có `is_error`, chỉ hiện khi khác 0 |
 | Đang gọi | Tên tool của lần `tool_use` gần nhất, chỉ hiện khi agent còn chạy |
+| Branch, giờ bắt đầu | `gitBranch` và `timestamp` của bản ghi đầu tiên |
 | Prompt | Bản ghi `user` đầu tiên - chính là nội dung dùng để gọi agent |
+
+Mọi số cộng dồn đều gom theo id trước khi đếm (`message.id` cho token, `tool_use.id` cho
+tool). Một lượt model được ghi thành nhiều bản ghi khi stream, nên đếm thẳng sẽ lặp.
 
 Hai điều phải nhớ khi sửa phần này:
 
