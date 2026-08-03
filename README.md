@@ -6,10 +6,10 @@ Dashboard localhost cho biết subagent nào của Claude Code đang chạy - th
 
 Bấm đúp vào `start-monitor.bat`. Trình duyệt tự mở, đóng cửa sổ đen là tắt server.
 
-Hoặc chạy tay:
+Hoặc chạy tay từ trong thư mục project:
 
 ```bash
-node D:/claude-tools/agent-monitor/server.js
+node server.js
 ```
 
 Rồi mở http://localhost:4478
