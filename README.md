@@ -2,11 +2,32 @@
 
 Dashboard localhost cho biết subagent nào của Claude Code đang chạy - thông tin mà giao diện Claude Code Desktop không hiển thị ra.
 
-## Chạy
+Cần Node.js. Không cần cài dependency - chỉ dùng module có sẵn của Node.
 
-Bấm đúp vào `start-monitor.bat`. Trình duyệt tự mở, đóng cửa sổ đen là tắt server.
+## Chạy nhanh
 
-Hoặc chạy tay từ trong thư mục project:
+**Windows:** bấm đúp `start-monitor.bat`
+
+**macOS:** bấm đúp `start-monitor.command`
+
+Trình duyệt tự mở. Đóng cửa sổ terminal là tắt server.
+
+Nếu macOS báo không có quyền chạy, cấp một lần rồi thôi:
+
+```bash
+chmod +x start-monitor.command
+```
+
+Nếu tải repo dạng file ZIP từ GitHub thay vì `git clone`, macOS đánh dấu cách ly file và
+chặn không cho mở. Gỡ dấu đó bằng:
+
+```bash
+xattr -d com.apple.quarantine start-monitor.command
+```
+
+## Chạy tay
+
+Mở terminal trong thư mục project rồi chạy:
 
 ```bash
 node server.js
@@ -14,7 +35,31 @@ node server.js
 
 Rồi mở http://localhost:4478
 
-Không cần cài dependency. Chỉ dùng module có sẵn của Node.
+Muốn trình duyệt tự mở luôn thì đặt biến `AGENT_MONITOR_OPEN`. Cú pháp khác nhau theo shell:
+
+macOS / Linux (bash, zsh):
+
+```bash
+AGENT_MONITOR_OPEN=1 node server.js
+```
+
+Windows PowerShell:
+
+```powershell
+$env:AGENT_MONITOR_OPEN=1; node server.js
+```
+
+Windows CMD:
+
+```
+set AGENT_MONITOR_OPEN=1 && node server.js
+```
+
+Đổi port cũng theo cách tương tự, ví dụ trên macOS:
+
+```bash
+AGENT_MONITOR_PORT=5000 node server.js
+```
 
 ## Biến môi trường
 
