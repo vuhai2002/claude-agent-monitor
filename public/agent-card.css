@@ -1,0 +1,176 @@
+/*
+ * One agent, one card: who it is, what it was asked to do, which model is
+ * answering, and what it has spent so far.
+ *
+ * Only a running card carries the accent. Finished ones step back so the eye
+ * lands on live work first.
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 15px 13px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 11px;
+}
+
+.card-running { border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+.card-done { background: none; }
+
+/* Head -------------------------------------------------------------------- */
+
+.card-head { display: flex; align-items: flex-start; gap: 9px; }
+
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--idle);
+}
+
+.card-running .dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  animation: throb 1.8s ease-in-out infinite;
+}
+
+.card-stale .dot { background: var(--warn); }
+
+@keyframes throb { 50% { opacity: 0.35; } }
+
+.who { min-width: 0; flex: 1; }
+
+.type {
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.card-done .type { color: var(--text-dim); font-weight: 400; }
+
+.project {
+  display: block;
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+
+.depth {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+/* Task -------------------------------------------------------------------- */
+
+.task {
+  margin: 0;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.card-done .task { color: var(--text-faint); }
+
+/* Chips ------------------------------------------------------------------- */
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip {
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.chip-model { background: var(--surface-lift); color: var(--text); }
+
+.chip-state { border-color: transparent; background: var(--surface-lift); }
+.card-running .chip-state {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.card-stale .chip-state { color: var(--warn); }
+
+/* What the agent is reaching for right now. */
+.chip-tool::before { content: "> "; color: var(--text-faint); }
+
+/* Metrics ----------------------------------------------------------------- */
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding-top: 11px;
+  border-top: 1px solid var(--rule);
+}
+
+.metrics > div { min-width: 0; }
+
+.metrics dt {
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.metrics dd {
+  margin: 1px 0 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.card-done .metrics dd { color: var(--text-dim); }
+
+/* Prompt disclosure ------------------------------------------------------- */
+
+.prompt { margin-top: -2px; }
+
+.prompt summary {
+  color: var(--text-faint);
+  font-size: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.prompt summary::-webkit-details-marker { display: none; }
+.prompt summary::before { content: "+ "; font-family: var(--mono); }
+.prompt[open] summary::before { content: "- "; }
+.prompt summary:hover { color: var(--text-dim); }
+
+.prompt pre {
+  max-height: 260px;
+  margin: 8px 0 0;
+  padding: 10px;
+  overflow: auto;
+  background: var(--surface-lift);
+  border-radius: 7px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-running .dot { animation: none; }
+}
