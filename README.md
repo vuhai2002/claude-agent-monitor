@@ -119,6 +119,31 @@ Hai chỗ dễ sai đã kiểm chứng bằng thực nghiệm:
 - Bản ghi `text`-only cũng xuất hiện GIỮA chừng: model viết một đoạn text mở đầu thành bản ghi riêng
   rồi một lát sau mới ghi tool call. Vì vậy phải chờ file lặng (`settleMs`) trước khi kết luận.
 
+## Số liệu trên mỗi thẻ
+
+| Chỉ số | Lấy từ đâu |
+| --- | --- |
+| Model | `message.model` của bản ghi assistant, rút gọn thành `Opus 5`, `Haiku 4.5` |
+| Token ra | Tổng `output_tokens`, gom theo `message.id` |
+| Tool | Số `tool_use` id duy nhất |
+| Lượt | Số `message.id` duy nhất |
+| Đang gọi | Tên tool của lần `tool_use` gần nhất, chỉ hiện khi agent còn chạy |
+| Prompt | Bản ghi `user` đầu tiên - chính là nội dung dùng để gọi agent |
+
+Hai điều phải nhớ khi sửa phần này:
+
+**Không được cộng thẳng token.** Một lượt model được ghi thành nhiều bản ghi khi nó
+stream (thinking, rồi text, rồi tool call), tất cả mang cùng `message.id` và khối
+`usage` được ghi đè lớn dần. Ví dụ thực tế: 7 lượt nhưng 15 bản ghi, `output_tokens`
+của cùng một message đi qua các giá trị 4 -> 4 -> 261. Cộng thẳng thì phồng lên nhiều lần.
+Phải gom theo `message.id` rồi lấy giá trị cuối.
+
+**Con số token ở đây KHÔNG bằng `subagent_tokens` mà Claude Code báo khi task xong.**
+Đã đối chiếu 6 lần chạy đã biết trước con số đó và không tìm ra công thức nào khớp
+(sai số dao động từ -13.866 tới +13.659). Số ở đây là số tự suy ra từ transcript và
+định nghĩa được chính xác, không phải cố tái tạo con số nội bộ kia.
+Riêng số tool calls thì khớp tuyệt đối cả 6/6.
+
 ## Hiệu năng
 
 Mỗi lần poll chỉ đọc 256KB cuối của transcript, và chỉ đọc lại khi mtime đổi.
