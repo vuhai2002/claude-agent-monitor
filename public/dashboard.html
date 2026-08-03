@@ -11,18 +11,35 @@
 <div class="shell">
   <header class="masthead">
     <div class="brand">
-      <span class="mark" id="mark" aria-hidden="true"></span>
+      <span class="logo" id="logo" aria-hidden="true"></span>
       <h1>subagent<em>monitor</em></h1>
     </div>
-    <p class="readout" id="readout">đang tải</p>
+    <div class="stats">
+      <span class="stat">
+        <span class="mark" id="mark" aria-hidden="true"></span>
+        <b id="count-running">0</b> đang chạy
+      </span>
+      <span class="stat">
+        <span class="stat-ico" id="total-ico" aria-hidden="true"></span>
+        <b id="count-total">0</b> tổng
+      </span>
+    </div>
   </header>
 
-  <main>
-    <section class="board" id="active-list"></section>
-    <button class="toggle" id="toggle" type="button" hidden></button>
-    <section class="board board-archive" id="done-list" hidden></section>
-  </main>
+  <p class="alert" id="alert" hidden></p>
+
+  <section class="idle" id="idle" hidden>
+    <div class="idle-figure" id="idle-figure"></div>
+    <h2 id="idle-title">không có subagent nào đang chạy</h2>
+    <p id="idle-note">Tất cả subagent hiện tại đều đã hoàn thành.</p>
+  </section>
+
+  <section class="board" id="active-list"></section>
+
+  <button class="toggle" id="toggle" type="button" hidden></button>
+
+  <section class="board board-archive" id="done-list" hidden></section>
 </div>
-<script src="/dashboard.js"></script>
+<script type="module" src="/dashboard.js"></script>
 </body>
 </html>

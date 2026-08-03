@@ -1,46 +1,53 @@
 /*
- * Shell, masthead and controls. The card itself lives in agent-card.css.
+ * Shell, masthead, empty state and controls. The card lives in agent-card.css.
  *
- * Palette follows Claude's own: warm neutrals rather than blue-grey, with the
- * terracotta accent reserved for work that is actually running, so a glance
- * tells you whether the machine is busy.
+ * Light by default: this is a page left open on a second screen next to an
+ * editor, and it should sit quietly beside one rather than glow. Palette keeps
+ * Claude's warm neutrals and terracotta accent, with green and red held back
+ * for the two things that are genuinely pass/fail.
  */
 
 :root {
-  color-scheme: dark light;
+  color-scheme: light dark;
 
-  --bg: #1f1e1d;
-  --surface: #262624;
-  --surface-lift: #30302e;
-  --rule: #3b3a36;
+  --bg: #f6f6f4;
+  --surface: #ffffff;
+  --surface-lift: #f3f2ee;
+  --rule: #e6e4de;
+  --shadow: 0 1px 2px rgba(31, 30, 29, 0.04), 0 4px 14px rgba(31, 30, 29, 0.04);
 
-  --text: #f5f4ef;
-  --text-dim: #b4b0a5;
-  --text-faint: #85817a;
+  --text: #201f1d;
+  --text-dim: #5d5850;
+  --text-faint: #8b867c;
 
   --accent: #d97757;
-  --warn: #c2954e;
-  --idle: #55534e;
+  --success: #2f855a;
+  --danger: #c0533f;
+  --warn: #b0782a;
+  --idle: #c7c3b9;
 
   --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, sans-serif;
   --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "SF Mono", Menlo,
     Consolas, monospace;
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg: #faf9f5;
-    --surface: #ffffff;
-    --surface-lift: #f0eee6;
-    --rule: #e3e0d8;
+    --bg: #1a1918;
+    --surface: #232221;
+    --surface-lift: #2c2b29;
+    --rule: #383632;
+    --shadow: none;
 
-    --text: #1f1e1d;
-    --text-dim: #5c574e;
-    --text-faint: #8a857b;
+    --text: #f2f0eb;
+    --text-dim: #b0aca2;
+    --text-faint: #837e75;
 
-    --accent: #b8552f;
-    --warn: #8a6420;
-    --idle: #c9c5bb;
+    --accent: #e08a69;
+    --success: #63b183;
+    --danger: #d98070;
+    --warn: #cfa159;
+    --idle: #4a4844;
   }
 }
 
@@ -58,10 +65,12 @@ body {
 }
 
 .shell {
-  max-width: 1320px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 28px 24px 72px;
+  padding: 20px 22px 64px;
 }
+
+.ico { flex: none; }
 
 /* Masthead ---------------------------------------------------------------- */
 
@@ -71,66 +80,137 @@ body {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 22px;
+  padding: 13px 16px;
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
 }
 
-.brand { display: flex; align-items: center; gap: 11px; }
+.brand { display: flex; align-items: center; gap: 12px; }
 
-/* Solid only while something runs, so the page reads busy or idle at a glance. */
-.mark {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  border: 1.5px solid var(--idle);
+.logo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
 }
-
-.mark.is-live {
-  border-color: var(--accent);
-  background: var(--accent);
-  animation: breathe 2s ease-in-out infinite;
-}
-
-@keyframes breathe { 50% { opacity: 0.35; } }
 
 h1 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 500;
   letter-spacing: -0.01em;
   color: var(--text-dim);
 }
 
-h1 em { font-style: normal; color: var(--text); }
+h1 em { font-style: normal; font-weight: 650; color: var(--text); }
 
-.readout {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 12px;
+.stats { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 11px;
+  font-size: 13px;
   color: var(--text-faint);
 }
 
-.readout b { font-weight: 500; color: var(--text-dim); }
-.readout b.is-live { color: var(--accent); }
+.stat b {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.stat-ico { display: grid; place-items: center; color: var(--text-faint); }
+
+/* Solid only while something runs, so the page reads busy or idle at a glance. */
+.mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--idle);
+}
+
+.mark.is-live {
+  border-color: var(--success);
+  background: var(--success);
+  animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe { 50% { opacity: 0.3; } }
+
+/* Connection notice ------------------------------------------------------- */
+
+.alert {
+  margin: 0 0 14px;
+  padding: 11px 15px;
+  background: color-mix(in srgb, var(--danger) 9%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: 12px;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.alert[hidden] { display: none; }
+
+/* Idle panel -------------------------------------------------------------- */
+
+.idle {
+  margin-bottom: 16px;
+  padding: 34px 24px 38px;
+  background: var(--surface);
+  border: 1px dashed var(--rule);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.idle[hidden] { display: none; }
+
+.idle-art { width: 148px; height: 111px; }
+
+.idle h2 {
+  margin: 6px 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.idle p { margin: 0; color: var(--text-faint); font-size: 13px; }
 
 /* Board ------------------------------------------------------------------- */
 
 .board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(352px, 1fr));
+  gap: 14px;
   align-items: start;
 }
 
-.board-archive { margin-top: 12px; }
+.board:empty { display: none; }
+.board-archive { margin-top: 14px; }
 
 /* Controls ---------------------------------------------------------------- */
 
 .toggle {
-  margin: 22px 0 0;
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 18px 0 0;
+  padding: 9px 14px;
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-radius: 8px;
+  border-radius: 11px;
+  box-shadow: var(--shadow);
   color: var(--text-dim);
   font: inherit;
   font-size: 13px;
@@ -140,19 +220,13 @@ h1 em { font-style: normal; color: var(--text); }
 
 .toggle:hover { color: var(--text); border-color: var(--text-faint); }
 .toggle[hidden] { display: none; }
-
-.empty {
-  grid-column: 1 / -1;
-  padding: 52px 0;
-  color: var(--text-faint);
-  font-family: var(--mono);
-  font-size: 13px;
-  text-align: center;
-}
+.toggle .ico { color: var(--text-faint); }
+.toggle .ico-end { margin-left: 2px; }
 
 @media (max-width: 560px) {
-  .shell { padding: 22px 14px 56px; }
+  .shell { padding: 14px 12px 48px; }
   .board { grid-template-columns: 1fr; }
+  .masthead { gap: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
