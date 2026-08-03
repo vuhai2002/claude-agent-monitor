@@ -12,7 +12,12 @@ const STALE_AFTER_MS = Number(process.env.AGENT_MONITOR_STALE_MS || 10 * 60 * 10
 const MAX_AGE_MS = Number(process.env.AGENT_MONITOR_MAX_AGE_MS || 24 * 60 * 60 * 1000);
 const SETTLE_MS = Number(process.env.AGENT_MONITOR_SETTLE_MS || 5 * 1000);
 
-const DASHBOARD_PATH = path.join(__dirname, 'public', 'dashboard.html');
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const CONTENT_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+};
 const scanner = new SubagentScanner({
   projectsRoot: PROJECTS_ROOT,
   staleAfterMs: STALE_AFTER_MS,
@@ -28,13 +33,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (route === '/' || route === '/index.html') {
-    sendDashboard(res);
-    return;
-  }
-
-  res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
-  res.end('not found');
+  sendAsset(res, route);
 });
 
 function sendAgents(res) {
@@ -53,14 +52,29 @@ function sendAgents(res) {
   res.end(body);
 }
 
-function sendDashboard(res) {
-  fs.readFile(DASHBOARD_PATH, (error, body) => {
+function sendAsset(res, route) {
+  // basename discards any traversal segments before a path reaches the disk,
+  // and the extension whitelist keeps this to the three files the page needs.
+  const name = route === '/' || route === '/index.html'
+    ? 'dashboard.html'
+    : path.basename(route);
+  const type = CONTENT_TYPES[path.extname(name)];
+
+  if (!type) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('not found');
+    return;
+  }
+
+  fs.readFile(path.join(PUBLIC_DIR, name), (error, body) => {
     if (error) {
-      res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
-      res.end('Không đọc được dashboard.html');
+      const missing = error.code === 'ENOENT';
+      res.writeHead(missing ? 404 : 500, { 'content-type': 'text/plain; charset=utf-8' });
+      res.end(missing ? 'not found' : 'Không đọc được ' + name);
       return;
     }
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    // No caching: the launcher serves straight off disk, so an edit shows on reload.
+    res.writeHead(200, { 'content-type': type, 'cache-control': 'no-store' });
     res.end(body);
   });
 }

@@ -3,203 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Claude subagent monitor</title>
-<style>
-  :root {
-    color-scheme: light dark;
-    --bg: #fbfaf9;
-    --panel: #ffffff;
-    --border: #e6e2dd;
-    --text: #1c1a17;
-    --muted: #7c756c;
-    --running: #16a34a;
-    --stale: #d97706;
-    --done: #9ca3af;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #15140f;
-      --panel: #1f1e18;
-      --border: #34322a;
-      --text: #f2efe8;
-      --muted: #9a9387;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    padding: 24px;
-    background: var(--bg);
-    color: var(--text);
-    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
-  h1 { font-size: 18px; margin: 0; font-weight: 650; }
-  .summary { color: var(--muted); font-size: 12px; }
-  .list { display: flex; flex-direction: column; gap: 8px; max-width: 860px; }
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 12px;
-    align-items: start;
-  }
-  .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; flex: none; }
-  .dot.running { background: var(--running); animation: pulse 1.4s ease-in-out infinite; }
-  .dot.stale { background: var(--stale); }
-  .dot.done { background: var(--done); }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
-  .type {
-    font-weight: 600;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 13px;
-  }
-  .desc { opacity: 0.85; margin-top: 2px; overflow-wrap: anywhere; }
-  .where { color: var(--muted); font-size: 12px; margin-top: 4px; }
-  .timing { text-align: right; white-space: nowrap; }
-  .elapsed { font-variant-numeric: tabular-nums; font-size: 13px; }
-  .state {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-top: 2px;
-  }
-  .badge {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 1px 7px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .empty { color: var(--muted); padding: 48px 0; text-align: center; }
-  .toggle {
-    margin: 14px 0 0;
-    padding: 7px 13px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--muted);
-    font: inherit;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .toggle:hover { color: var(--text); }
-  .toggle[hidden] { display: none; }
-  #done-list { margin-top: 8px; }
-</style>
+<title>Subagent monitor</title>
+<link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
-<header>
-  <h1>Subagent monitor</h1>
-  <span class="summary" id="summary">đang tải...</span>
-</header>
-<div class="list" id="active-list"></div>
-<button class="toggle" id="toggle" type="button" hidden></button>
-<div class="list" id="done-list" hidden></div>
+<div class="shell">
+  <header class="masthead">
+    <div class="brand">
+      <span class="mark" id="mark" aria-hidden="true"></span>
+      <h1>subagent<em>monitor</em></h1>
+    </div>
+    <p class="readout" id="readout">đang tải</p>
+  </header>
 
-<script>
-const POLL_MS = 1000;
-const STATE_LABEL = { running: 'đang chạy', stale: 'không rõ', done: 'xong' };
-
-let agents = [];
-let lastError = null;
-// Finished agents are collapsed by default - the point of the page is what is
-// running right now, and a day of history buries it.
-let showDone = false;
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"]/g, (char) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]
-  ));
-}
-
-function formatDuration(ms) {
-  const safe = Number.isFinite(ms) && ms > 0 ? ms : 0;
-  const seconds = Math.floor(safe / 1000);
-  if (seconds < 60) return seconds + 's';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return minutes + 'm ' + String(seconds % 60).padStart(2, '0') + 's';
-  return Math.floor(minutes / 60) + 'h ' + String(minutes % 60).padStart(2, '0') + 'm';
-}
-
-function renderCard(agent, now) {
-  // Running agents keep ticking against the local clock between polls.
-  const elapsed = agent.status === 'done' ? agent.elapsedMs : now - agent.startedAt;
-  const depth = agent.spawnDepth > 1 ? '<span class="badge">depth ' + agent.spawnDepth + '</span>' : '';
-
-  return '<div class="card">'
-    + '<div class="dot ' + agent.status + '"></div>'
-    + '<div>'
-    + '<div class="type">' + escapeHtml(agent.agentType) + depth + '</div>'
-    + '<div class="desc">' + escapeHtml(agent.description || '(không có mô tả)') + '</div>'
-    + '<div class="where">' + escapeHtml(agent.projectLabel) + '</div>'
-    + '</div>'
-    + '<div class="timing">'
-    + '<div class="elapsed">' + formatDuration(elapsed) + '</div>'
-    + '<div class="state">' + STATE_LABEL[agent.status] + '</div>'
-    + '</div>'
-    + '</div>';
-}
-
-function render() {
-  const activeList = document.getElementById('active-list');
-  const doneList = document.getElementById('done-list');
-  const toggle = document.getElementById('toggle');
-  const summary = document.getElementById('summary');
-
-  // "stale" is unfinished work that went quiet, so it stays in the active list -
-  // a stuck agent is exactly what someone watching this page wants to notice.
-  const active = agents.filter((agent) => agent.status !== 'done');
-  const done = agents.filter((agent) => agent.status === 'done');
-
-  if (lastError) {
-    summary.textContent = 'lỗi: ' + lastError;
-  } else {
-    const running = active.filter((agent) => agent.status === 'running').length;
-    summary.textContent = running + ' đang chạy / ' + agents.length + ' tổng';
-  }
-
-  const now = Date.now();
-
-  activeList.innerHTML = active.length
-    ? active.map((agent) => renderCard(agent, now)).join('')
-    : '<div class="empty">'
-      + (agents.length ? 'Không có subagent nào đang chạy.' : 'Chưa ghi nhận subagent nào.')
-      + '</div>';
-
-  toggle.hidden = done.length === 0;
-  toggle.textContent = (showDone ? 'Ẩn ' : 'Hiện ') + done.length + ' đã xong';
-
-  doneList.hidden = !showDone || done.length === 0;
-  doneList.innerHTML = showDone ? done.map((agent) => renderCard(agent, now)).join('') : '';
-}
-
-async function poll() {
-  try {
-    const response = await fetch('/api/agents');
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const data = await response.json();
-    agents = Array.isArray(data.agents) ? data.agents : [];
-    lastError = null;
-  } catch (error) {
-    lastError = error.message;
-  }
-  render();
-}
-
-document.getElementById('toggle').addEventListener('click', () => {
-  showDone = !showDone;
-  render();
-});
-
-poll();
-setInterval(poll, POLL_MS);
-</script>
+  <main>
+    <section class="board" id="active-list"></section>
+    <button class="toggle" id="toggle" type="button" hidden></button>
+    <section class="board board-archive" id="done-list" hidden></section>
+  </main>
+</div>
+<script src="/dashboard.js"></script>
 </body>
 </html>
