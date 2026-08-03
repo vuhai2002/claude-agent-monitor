@@ -109,6 +109,10 @@ Bản ghi cuối của transcript agent nói lên tất cả:
 | `running` | Mọi trường hợp còn lại, khi file vẫn còn được ghi gần đây |
 | `stale` | Chưa xong nhưng không có hoạt động nào quá `AGENT_MONITOR_STALE_MS` - thường là session bị đóng giữa chừng |
 
+Mặc định dashboard chỉ hiện `running` và `stale`. Agent đã `done` được gom lại sau một nút
+bấm, vì thứ cần nhìn là cái đang chạy - một ngày lịch sử sẽ chôn mất nó. `stale` nằm cùng
+nhóm với `running` chứ không bị ẩn: đó là việc chưa xong mà im tiếng, đúng thứ cần chú ý.
+
 Hai chỗ dễ sai đã kiểm chứng bằng thực nghiệm:
 
 - `stop_reason` KHÔNG dùng được. Bản ghi kết thúc được quan sát thấy mang cả `"end_turn"` lẫn `null`.

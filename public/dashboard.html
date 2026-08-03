@@ -78,6 +78,20 @@
     color: var(--muted);
   }
   .empty { color: var(--muted); padding: 48px 0; text-align: center; }
+  .toggle {
+    margin: 14px 0 0;
+    padding: 7px 13px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .toggle:hover { color: var(--text); }
+  .toggle[hidden] { display: none; }
+  #done-list { margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -85,7 +99,9 @@
   <h1>Subagent monitor</h1>
   <span class="summary" id="summary">đang tải...</span>
 </header>
-<div class="list" id="list"></div>
+<div class="list" id="active-list"></div>
+<button class="toggle" id="toggle" type="button" hidden></button>
+<div class="list" id="done-list" hidden></div>
 
 <script>
 const POLL_MS = 1000;
@@ -93,6 +109,9 @@ const STATE_LABEL = { running: 'đang chạy', stale: 'không rõ', done: 'xong'
 
 let agents = [];
 let lastError = null;
+// Finished agents are collapsed by default - the point of the page is what is
+// running right now, and a day of history buries it.
+let showDone = false;
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"]/g, (char) => (
@@ -129,23 +148,36 @@ function renderCard(agent, now) {
 }
 
 function render() {
-  const list = document.getElementById('list');
+  const activeList = document.getElementById('active-list');
+  const doneList = document.getElementById('done-list');
+  const toggle = document.getElementById('toggle');
   const summary = document.getElementById('summary');
+
+  // "stale" is unfinished work that went quiet, so it stays in the active list -
+  // a stuck agent is exactly what someone watching this page wants to notice.
+  const active = agents.filter((agent) => agent.status !== 'done');
+  const done = agents.filter((agent) => agent.status === 'done');
 
   if (lastError) {
     summary.textContent = 'lỗi: ' + lastError;
   } else {
-    const running = agents.filter((agent) => agent.status === 'running').length;
+    const running = active.filter((agent) => agent.status === 'running').length;
     summary.textContent = running + ' đang chạy / ' + agents.length + ' tổng';
   }
 
-  if (agents.length === 0) {
-    list.innerHTML = '<div class="empty">Chưa ghi nhận subagent nào.</div>';
-    return;
-  }
-
   const now = Date.now();
-  list.innerHTML = agents.map((agent) => renderCard(agent, now)).join('');
+
+  activeList.innerHTML = active.length
+    ? active.map((agent) => renderCard(agent, now)).join('')
+    : '<div class="empty">'
+      + (agents.length ? 'Không có subagent nào đang chạy.' : 'Chưa ghi nhận subagent nào.')
+      + '</div>';
+
+  toggle.hidden = done.length === 0;
+  toggle.textContent = (showDone ? 'Ẩn ' : 'Hiện ') + done.length + ' đã xong';
+
+  doneList.hidden = !showDone || done.length === 0;
+  doneList.innerHTML = showDone ? done.map((agent) => renderCard(agent, now)).join('') : '';
 }
 
 async function poll() {
@@ -160,6 +192,11 @@ async function poll() {
   }
   render();
 }
+
+document.getElementById('toggle').addEventListener('click', () => {
+  showDone = !showDone;
+  render();
+});
 
 poll();
 setInterval(poll, POLL_MS);
