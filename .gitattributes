@@ -1,0 +1,12 @@
+# Normalise to LF in the repository, check out per platform convention.
+* text=auto
+
+# cmd.exe mis-parses a batch file with LF-only endings, notably inside a
+# multi-line "if ( ... )" block, so force CRLF regardless of the cloner's
+# core.autocrlf setting.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Shell launchers must stay LF even when checked out on Windows.
+*.sh text eol=lf
+*.command text eol=lf
