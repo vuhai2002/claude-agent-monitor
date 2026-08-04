@@ -125,9 +125,14 @@ function metricsHtml() {
 }
 
 function metricValues(agent, now) {
-  const finished = agent.status === 'done';
+  // A running clock is recomputed here so it moves between polls rather than
+  // once a second in steps. Anything that stopped keeps the figure the server
+  // froze for it - recomputing that would restart the count from its start
+  // time and show a stopped agent as if it were still going.
+  const elapsed = agent.status === 'running' ? now - agent.startedAt : agent.elapsedMs;
+
   return {
-    elapsed: formatDuration(finished ? agent.elapsedMs : now - agent.startedAt),
+    elapsed: formatDuration(elapsed),
     input: formatCount(agent.contextTokens),
     output: formatCount(agent.outputTokens),
     cache: formatCount(agent.cacheReadTokens),

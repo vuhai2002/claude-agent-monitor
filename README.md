@@ -25,6 +25,16 @@ chặn không cho mở. Gỡ dấu đó bằng:
 xattr -d com.apple.quarantine start-monitor.command
 ```
 
+## Giao diện sáng / tối
+
+Nút ở góc phải thanh tiêu đề đổi giữa sáng và tối. Lựa chọn được nhớ trong `localStorage`.
+Khi chưa chọn gì, trang đi theo cài đặt của hệ điều hành và đổi theo ngay lúc hệ thống đổi.
+
+Bảng màu gắn vào thuộc tính `data-theme` trên thẻ `html` chứ không gắn vào
+`@media (prefers-color-scheme)`, vì media query thì nút không ghi đè được.
+Thuộc tính này do một đoạn script nội tuyến trong `<head>` đặt, chạy trước lần vẽ đầu tiên -
+nếu để module `dashboard.js` (vốn deferred) đặt thì sẽ thấy trang loé sáng rồi mới chuyển tối.
+
 ## Chạy tay
 
 Mở terminal trong thư mục project rồi chạy:
@@ -134,6 +144,12 @@ Hai chỗ dễ sai đã kiểm chứng bằng thực nghiệm:
 | Lỗi | Số `tool_result` có `is_error`, chỉ hiện khi khác 0 |
 | Đang gọi | Tên tool của lần `tool_use` gần nhất, chỉ hiện khi agent còn chạy |
 | Branch, giờ bắt đầu | `gitBranch` và `timestamp` của bản ghi đầu tiên |
+| Thời gian | Từ lúc bắt đầu tới lúc có hoạt động cuối. Chỉ agent `running` mới đếm tiếp; agent đã dừng thì đóng băng |
+
+Giờ bắt đầu lấy từ `timestamp` trong transcript, KHÔNG lấy từ mtime của `meta.json`.
+Khi một agent bị dừng giữa chừng, file `meta.json` bị ghi lại ngay lúc đó, nên mtime của nó
+nhảy về thời điểm bị kill. Đo trên 10 agent: 9 con mtime khớp chính xác, riêng con bị kill
+lệch 157 giây.
 | Prompt | Bản ghi `user` đầu tiên - chính là nội dung dùng để gọi agent |
 
 Mọi số cộng dồn đều gom theo id trước khi đếm (`message.id` cho token, `tool_use.id` cho
