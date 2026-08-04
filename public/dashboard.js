@@ -2,6 +2,7 @@ import { cardHtml, refreshCard } from './agent-card.js';
 import { icon, idleFigure } from './icons.js';
 
 const POLL_MS = 1000;
+const THEME_KEY = 'theme';
 
 let agents = [];
 let lastError = null;
@@ -27,12 +28,31 @@ const el = {
   active: document.getElementById('active-list'),
   done: document.getElementById('done-list'),
   toggle: document.getElementById('toggle'),
+  theme: document.getElementById('theme'),
 };
 
 function paintChrome() {
   el.logo.innerHTML = icon('pulse', 20);
   el.totalIco.innerHTML = icon('layers', 15);
   el.idleFigure.innerHTML = idleFigure();
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+}
+
+/* Theme ------------------------------------------------------------------- */
+
+function storedTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY);
+  } catch {
+    return null; // private mode, or storage disabled
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  // The button shows the theme it switches to, not the one in use.
+  el.theme.innerHTML = icon(theme === 'dark' ? 'sun' : 'moon', 17);
+  el.theme.title = theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối';
 }
 
 function signatureOf(ordered) {
@@ -118,6 +138,21 @@ async function poll() {
 el.toggle.addEventListener('click', () => {
   showDone = !showDone;
   render();
+});
+
+el.theme.addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    // Storage unavailable: the choice still holds for this session.
+  }
+  applyTheme(next);
+});
+
+// Keep following the system for as long as the reader has not chosen for themselves.
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+  if (!storedTheme()) applyTheme(event.matches ? 'dark' : 'light');
 });
 
 paintChrome();

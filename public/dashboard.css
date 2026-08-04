@@ -7,8 +7,11 @@
  * for the two things that are genuinely pass/fail.
  */
 
+/* An inline script in the document head stamps data-theme on <html> before the
+   first paint, so the palette switches on that attribute rather than on a media
+   query - a media query cannot be overridden by the toggle. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --bg: #f6f6f4;
   --surface: #ffffff;
@@ -31,24 +34,24 @@
     Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1a1918;
-    --surface: #232221;
-    --surface-lift: #2c2b29;
-    --rule: #383632;
-    --shadow: none;
+:root[data-theme="dark"] {
+  color-scheme: dark;
 
-    --text: #f2f0eb;
-    --text-dim: #b0aca2;
-    --text-faint: #837e75;
+  --bg: #1a1918;
+  --surface: #232221;
+  --surface-lift: #2c2b29;
+  --rule: #383632;
+  --shadow: none;
 
-    --accent: #e08a69;
-    --success: #63b183;
-    --danger: #d98070;
-    --warn: #cfa159;
-    --idle: #4a4844;
-  }
+  --text: #f2f0eb;
+  --text-dim: #b0aca2;
+  --text-faint: #837e75;
+
+  --accent: #e08a69;
+  --success: #63b183;
+  --danger: #d98070;
+  --warn: #cfa159;
+  --idle: #4a4844;
 }
 
 * { box-sizing: border-box; }
@@ -132,6 +135,25 @@ h1 em { font-style: normal; font-weight: 650; color: var(--text); }
 }
 
 .stat-ico { display: grid; place-items: center; color: var(--text-faint); }
+
+.theme-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 11px;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.theme-btn:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
 
 /* Solid only while something runs, so the page reads busy or idle at a glance. */
 .mark {

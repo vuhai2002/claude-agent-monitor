@@ -6,6 +6,16 @@
 <title>Subagent monitor</title>
 <link rel="stylesheet" href="/dashboard.css">
 <link rel="stylesheet" href="/agent-card.css">
+<script>
+  // Runs before the first paint. The module script is deferred, so resolving the
+  // theme there instead would show a flash of light before switching to dark.
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem('theme'); } catch (e) { /* private mode */ }
+    var system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = stored === 'dark' || stored === 'light' ? stored : system;
+  }());
+</script>
 </head>
 <body>
 <div class="shell">
@@ -23,6 +33,7 @@
         <span class="stat-ico" id="total-ico" aria-hidden="true"></span>
         <b id="count-total">0</b> tổng
       </span>
+      <button class="theme-btn" id="theme" type="button" aria-label="Đổi giao diện sáng tối"></button>
     </div>
   </header>
 
