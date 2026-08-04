@@ -55,8 +55,11 @@ function applyTheme(theme) {
   el.theme.title = theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối';
 }
 
+// Includes `archived`: crossing the archive threshold moves a card between the
+// two lists without its status changing, and that has to force a rebuild.
 function signatureOf(ordered) {
-  return showDone + '|' + ordered.map((a) => a.agentId + ':' + a.status).join(',');
+  return showDone + '|'
+    + ordered.map((a) => a.agentId + ':' + a.status + ':' + a.archived).join(',');
 }
 
 function refreshAll() {
@@ -86,36 +89,39 @@ function updateIdle(activeCount) {
     ? 'không có subagent nào đang chạy'
     : 'chưa ghi nhận subagent nào';
   el.idleNote.textContent = anyHistory
-    ? 'Tất cả subagent hiện tại đều đã hoàn thành.'
+    ? 'Mọi subagent gần đây đều đã kết thúc.'
     : 'Chạy một subagent trong Claude Code rồi quay lại đây.';
 }
 
-function updateToggle(doneCount) {
-  el.toggle.hidden = doneCount === 0;
+// "đã kết thúc", not "đã xong": the archive also holds agents that went quiet
+// without finishing, and calling those done would misreport them.
+function updateToggle(count) {
+  el.toggle.hidden = count === 0;
   el.toggle.innerHTML = showDone
-    ? icon('eyeOff', 15) + 'Ẩn ' + doneCount + ' đã xong'
+    ? icon('eyeOff', 15) + 'Ẩn ' + count + ' mục đã kết thúc'
       + '<span class="ico-end">' + icon('close', 14) + '</span>'
-    : icon('eye', 15) + 'Hiện ' + doneCount + ' đã xong';
+    : icon('eye', 15) + 'Hiện ' + count + ' mục đã kết thúc';
 }
 
 function render() {
-  // "stale" is unfinished work that went quiet, so it stays alongside running -
-  // a stuck agent is exactly what someone watching this page wants to notice.
-  const active = agents.filter((agent) => agent.status !== 'done');
-  const done = agents.filter((agent) => agent.status === 'done');
+  // The server decides placement: a recently stuck agent stays on the live
+  // board because that is worth noticing, while one silent for an hour joins
+  // the finished work.
+  const active = agents.filter((agent) => !agent.archived);
+  const archived = agents.filter((agent) => agent.archived);
 
   updateHeader(active);
   updateIdle(active.length);
 
-  const signature = signatureOf(active.concat(done));
+  const signature = signatureOf(active.concat(archived));
   if (signature !== builtSignature) {
     builtSignature = signature;
 
     el.active.innerHTML = active.map(cardHtml).join('');
-    updateToggle(done.length);
+    updateToggle(archived.length);
 
-    el.done.hidden = !showDone || done.length === 0;
-    el.done.innerHTML = showDone ? done.map(cardHtml).join('') : '';
+    el.done.hidden = !showDone || archived.length === 0;
+    el.done.innerHTML = showDone ? archived.map(cardHtml).join('') : '';
   }
 
   // Runs after both paths: a fresh card is built with placeholder figures.

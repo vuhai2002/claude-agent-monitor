@@ -9,6 +9,7 @@ const { SubagentScanner, DEFAULT_PROJECTS_ROOT } = require('./lib/subagent-scann
 const PORT = Number(process.env.AGENT_MONITOR_PORT || 4478);
 const PROJECTS_ROOT = process.env.AGENT_MONITOR_PROJECTS_ROOT || DEFAULT_PROJECTS_ROOT;
 const STALE_AFTER_MS = Number(process.env.AGENT_MONITOR_STALE_MS || 10 * 60 * 1000);
+const ARCHIVE_AFTER_MS = Number(process.env.AGENT_MONITOR_ARCHIVE_MS || 60 * 60 * 1000);
 const MAX_AGE_MS = Number(process.env.AGENT_MONITOR_MAX_AGE_MS || 24 * 60 * 60 * 1000);
 const SETTLE_MS = Number(process.env.AGENT_MONITOR_SETTLE_MS || 5 * 1000);
 
@@ -21,6 +22,7 @@ const CONTENT_TYPES = {
 const scanner = new SubagentScanner({
   projectsRoot: PROJECTS_ROOT,
   staleAfterMs: STALE_AFTER_MS,
+  archiveAfterMs: ARCHIVE_AFTER_MS,
   maxAgeMs: MAX_AGE_MS,
   settleMs: SETTLE_MS,
 });

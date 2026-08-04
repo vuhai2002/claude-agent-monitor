@@ -78,6 +78,7 @@ AGENT_MONITOR_PORT=5000 node server.js
 | `AGENT_MONITOR_PORT` | `4478` | Port của dashboard |
 | `AGENT_MONITOR_PROJECTS_ROOT` | `~/.claude/projects` | Thư mục transcript cần quét |
 | `AGENT_MONITOR_STALE_MS` | `600000` | Im lặng bao lâu thì coi là "không rõ" |
+| `AGENT_MONITOR_ARCHIVE_MS` | `3600000` | Im lặng bao lâu thì rời bảng chính, gộp xuống mục đã kết thúc |
 | `AGENT_MONITOR_MAX_AGE_MS` | `86400000` | Chỉ hiện agent có hoạt động trong khoảng này |
 | `AGENT_MONITOR_SETTLE_MS` | `5000` | Chờ transcript lặng bao lâu trước khi kết luận đã xong |
 | `AGENT_MONITOR_OPEN` | (tắt) | Đặt `1` để tự mở trình duyệt khi server sẵn sàng |
@@ -119,9 +120,15 @@ Bản ghi cuối của transcript agent nói lên tất cả:
 | `running` | Mọi trường hợp còn lại, khi file vẫn còn được ghi gần đây |
 | `stale` | Chưa xong nhưng không có hoạt động nào quá `AGENT_MONITOR_STALE_MS` - thường là session bị đóng giữa chừng |
 
-Mặc định dashboard chỉ hiện `running` và `stale`. Agent đã `done` được gom lại sau một nút
-bấm, vì thứ cần nhìn là cái đang chạy - một ngày lịch sử sẽ chôn mất nó. `stale` nằm cùng
-nhóm với `running` chứ không bị ẩn: đó là việc chưa xong mà im tiếng, đúng thứ cần chú ý.
+Trạng thái và vị trí hiển thị là hai chuyện khác nhau:
+
+- **Bảng chính** giữ agent `running`, và agent `stale` còn trong vòng `AGENT_MONITOR_ARCHIVE_MS`.
+  Agent vừa kẹt là thứ đáng chú ý nên phải nổi lên.
+- **Mục đã kết thúc** (thu gọn sau một nút bấm) chứa agent `done`, và cả agent `stale` đã im
+  lặng quá ngưỡng đó. Một agent chết từ sáng là lịch sử, không nên chiếm chỗ bảng chính.
+
+Nhãn nút ghi "mục đã kết thúc" chứ không phải "đã xong", vì nhóm này có cả agent chưa hoàn
+thành - gọi chúng là "đã xong" là báo sai.
 
 Hai chỗ dễ sai đã kiểm chứng bằng thực nghiệm:
 
